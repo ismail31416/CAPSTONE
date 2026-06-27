@@ -1,0 +1,47 @@
+# CAPSTONE default configuration.
+# These mirror the settings reported in the paper (Sections 3 & 4.1). The
+# scripts currently read CLI flags; this file is the single reference for the
+# values used in the published experiments and a template for your own configs.
+
+perception:
+  detector:
+    weights: yolov8l.pt        # paper also reports YOLOv11 (yolo11l.pt)
+    conf_threshold: 0.10       # detection confidence threshold (tau)
+    iou_threshold: 0.50        # NMS IoU
+    tile_size: 640             # overlapping tiles
+    tile_stride_overlap: 0.20  # 20% stride overlap to maximize recall
+  classifier:
+    backbone: imagenet-1000    # for horizontal/vertical stripe & crop classification
+  color:
+    method: kmeans
+    k: 3                       # HSV-space dominant colors per object
+  pose:
+    weights: yolov8n-pose.pt
+    match_threshold_px: 50     # associate a detection with a pose
+  depth:
+    model: Intel/dpt-large     # monocular depth estimation
+  ocr:
+    engine: easyocr
+    langs: [ch_sim, en]
+
+reasoning:
+  # Frozen LLM backends evaluated in the paper. Best on POPE: Qwen2.5-7B.
+  # Best on VSR: Qwen3-4B-Thinking.
+  model: Qwen/Qwen2.5-7B-Instruct
+  prompt_style: chain_of_thought   # {chain_of_thought, direct}
+  max_new_tokens: 1024
+  temperature: 0.7
+  top_p: 0.9
+  do_sample: true
+  no_repeat_ngram_size: 3
+  batch_size: null             # null => auto from free GPU memory
+  seeds: [0, 1, 2, 3]          # results averaged over four seeds
+
+datasets:
+  pope:
+    hf_id: lmms-lab/POPE       # binary object-presence (Random/Popular/Adversarial)
+    metric: accuracy
+  vsr:
+    hf_id: cambridgeltl/vsr_zeroshot   # visual spatial reasoning
+    split: test
+    metrics: [accuracy, precision, recall, f1]
